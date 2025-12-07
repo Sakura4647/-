@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>水之定立｜指尖穩勢</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Noto Sans TC"', 'sans-serif'],
+            },
+            colors: {
+              wood: {
+                50: '#fdf8f6',
+                100: '#f2e8e5',
+                200: '#eaddd7',
+                300: '#e0cec7',
+                400: '#d2bab0',
+                500: '#a18e87',
+                600: '#8a7a74',
+                700: '#72635e',
+                800: '#5e514d',
+                900: '#4a403d',
+              },
+              water: {
+                light: '#e0f2fe', // Sky 100
+                main: '#38bdf8',  // Sky 400 - Main Highlight
+                dark: '#0284c7',  // Sky 600
+                accent: '#0ea5e9',
+              }
+            },
+            animation: {
+              'sway': 'sway 3s ease-in-out infinite',
+            },
+            keyframes: {
+              sway: {
+                '0%, 100%': { transform: 'rotate(-2deg)' },
+                '50%': { transform: 'rotate(2deg)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Noto Sans TC', sans-serif;
+        background-color: #fdf8f6;
+        overflow: hidden; /* Prevent scrolling during game */
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      .wood-texture {
+        background-color: #fcf6f0;
+        background-image: radial-gradient(#d4c5b8 0.5px, transparent 0.5px), radial-gradient(#d4c5b8 0.5px, #fcf6f0 0.5px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+      }
+      .fade-in { animation: fadeIn 0.3s ease-out; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      
+      /* Shiny Water Drop Effect */
+      .water-drop {
+        background: radial-gradient(circle at 35% 25%, white 2%, #38bdf8 15%, #0284c7 80%);
+        box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.1);
+      }
+      .water-highlight {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
+  }
+}
+</script>
+</head>
+<body class="wood-texture text-wood-900 min-h-screen tracking-wide">
+    <div id="root"></div>
+</body>
+</html>
