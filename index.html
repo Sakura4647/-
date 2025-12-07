@@ -35,15 +35,6 @@
                 dark: '#0284c7',  // Sky 600
                 accent: '#0ea5e9',
               }
-            },
-            animation: {
-              'sway': 'sway 3s ease-in-out infinite',
-            },
-            keyframes: {
-              sway: {
-                '0%, 100%': { transform: 'rotate(-2deg)' },
-                '50%': { transform: 'rotate(2deg)' },
-              }
             }
           }
         }
@@ -66,27 +57,480 @@
       }
       .fade-in { animation: fadeIn 0.3s ease-out; }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      
+
       /* Shiny Water Drop Effect */
       .water-drop {
         background: radial-gradient(circle at 35% 25%, white 2%, #38bdf8 15%, #0284c7 80%);
-        box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.1);
+        box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.15);
       }
-      .water-highlight {
-        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+      .hidden-force {
+        display: none !important;
       }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
-  }
-}
-</script>
 </head>
 <body class="wood-texture text-wood-900 min-h-screen tracking-wide">
-    <div id="root"></div>
+  <div id="app" class="relative min-h-screen">
+
+    <!-- Start Screen -->
+    <div id="screen-start" class="min-h-screen flex flex-col items-center justify-center p-4">
+      <div class="max-w-md w-full bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl border-2 border-wood-300 text-center fade-in">
+        <div class="mb-6">
+          <span class="text-6xl">💧</span>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-black text-wood-900 mb-6 tracking-widest">
+          水之定立｜指尖穩勢
+        </h1>
+
+        <!-- Subtitle + Rules -->
+        <div class="bg-wood-50 p-6 rounded-xl border border-wood-300 text-left mb-8">
+          <p class="text-wood-700 mb-4 font-bold tracking-wider text-lg">
+            腎為先天之本，腎氣充盈則穩如靜水。
+          </p>
+          <p class="text-base text-wood-600 mb-6 leading-relaxed font-medium tracking-wide">
+            水行對應臟腑為腎與膀胱，與骨骼、平衡與穩定有關。
+          </p>
+
+          <h2 class="text-xl font-bold text-wood-800 mb-3 border-b border-wood-300 pb-2 flex items-center gap-2 tracking-wider">
+            <span>📜</span> 遊戲規則
+          </h2>
+          <ul class="space-y-3 text-wood-800 leading-relaxed text-base font-medium tracking-wide">
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-water-main">①</span>
+              <span>點按左右側，保持水滴的重心</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-water-main">②</span>
+              <span>長按短按可調整調整的力道</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="font-bold text-water-main">③</span>
+              <span>根據維持平衡的秒數計分</span>
+            </li>
+          </ul>
+        </div>
+
+        <button
+          onclick="game.startGame()"
+          class="w-full font-bold rounded-lg transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center gap-2 bg-water-main hover:bg-water-accent text-white shadow-wood-200 px-8 py-3 text-2xl tracking-widest"
+        >
+          開始遊戲
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="screen-game" class="hidden-force min-h-screen flex flex-col">
+      <!-- Top bar -->
+      <div class="h-16 bg-white/95 backdrop-blur border-b border-wood-300 shadow-sm px-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">💧</span>
+          <span class="hidden sm:block text-wood-800 font-bold tracking-wide">維持平衡中...</span>
+        </div>
+        <div class="text-wood-700 font-mono text-lg tracking-widest">
+          <span>時間：</span>
+          <span id="time-display">0</span><span>s</span>
+        </div>
+        <div>
+          <button
+            onclick="game.restart()"
+            class="font-bold rounded-lg transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center gap-2 bg-water-main hover:bg-water-accent text-white px-3 py-1 text-base tracking-wide"
+          >
+            重來
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Area -->
+      <div
+        id="game-area"
+        class="flex-1 flex flex-col items-center justify-center p-4"
+      >
+        <!-- Hint -->
+        <div class="mb-6 text-center">
+          <p class="text-wood-700 font-bold tracking-wider text-lg mb-2">
+            輕點左右側，讓水滴穩穩站立
+          </p>
+          <p class="text-wood-500 text-sm tracking-wide">
+            長按力道較大，短按則細緻微調
+          </p>
+        </div>
+
+        <!-- Drop + Baseline -->
+        <div class="relative w-full max-w-xs h-80 flex items-center justify-center">
+          <!-- Baseline -->
+          <div class="absolute bottom-16 left-1/2 -translate-x-1/2 w-40 h-0.5 bg-wood-300 rounded-full"></div>
+
+          <!-- Water Drop Wrapper -->
+          <div
+            id="drop-wrapper"
+            class="absolute bottom-24 left-1/2 -translate-x-1/2 origin-bottom transition-transform duration-75"
+          >
+            <div class="relative w-20 h-28 flex items-center justify-center">
+              <!-- Drop Shape -->
+              <div
+                id="water-drop"
+                class="water-drop w-16 h-24 rounded-full relative"
+                style="clip-path: path('M 50 0 C 80 40 100 70 80 100 C 60 120 40 120 20 100 C 0 70 20 40 50 0 Z');"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer in center (big) -->
+        <div class="mt-8 flex flex-col items-center justify-center">
+          <div class="text-wood-600 font-bold text-xl mb-2 tracking-wider">維持時間</div>
+          <div
+            id="time-display-big"
+            class="font-mono text-6xl md:text-7xl font-black text-wood-800 drop-shadow-sm leading-none"
+          >
+            0
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div
+      id="modal-result"
+      class="hidden-force fixed inset-0 z-50 flex items-center justify-center p-4 bg-wood-900/60 backdrop-blur-sm fade-in"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-6 text-center relative border-2 border-wood-300">
+        <!-- Close X -->
+        <button
+          onclick="ui.closeResult()"
+          class="absolute top-4 right-4 text-wood-400 hover:text-wood-700 transition-colors p-2 rounded-full hover:bg-wood-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <div class="text-7xl mb-4">💧</div>
+
+        <div class="mb-4">
+          <p class="text-wood-600 mb-1 font-bold tracking-wider text-lg">
+            維持時間
+          </p>
+          <p class="text-5xl font-black text-wood-900 tracking-wide mb-2">
+            <span id="res-time">0</span> s
+          </p>
+        </div>
+
+        <div class="bg-wood-50 p-4 rounded-xl border-2 border-wood-200 mb-4">
+          <h3
+            id="res-msg"
+            class="text-2xl font-bold text-water-dark mb-2 tracking-wider"
+          >
+          </h3>
+          <p
+            id="res-submsg"
+            class="text-wood-700 text-base mb-3 font-medium leading-relaxed tracking-wide"
+          >
+          </p>
+          <div
+            class="flex justify-center items-center gap-1 text-water-dark text-base font-bold bg-white py-2 rounded-lg border border-wood-200 shadow-sm"
+          >
+            <span>得分：</span>
+            <span id="res-score" class="text-3xl text-wood-800">0</span>
+            <span>分</span>
+          </div>
+        </div>
+
+        <!-- Scoring Table -->
+        <div class="text-left mb-6">
+          <h4 class="text-base font-bold text-wood-500 mb-2 border-b border-wood-200 pb-1 tracking-wider">
+            🏅 計分方式
+          </h4>
+          <div class="space-y-2 text-sm text-wood-700 tracking-wide">
+            <div class="flex justify-between items-center gap-2">
+              <span class="font-bold text-water-dark whitespace-nowrap">20–30 秒</span>
+              <span class="font-bold text-wood-700">3分</span>
+              <span class="text-right flex-1">腎氣充盈，穩若靜水</span>
+            </div>
+            <div class="flex justify-between items-center gap-2">
+              <span class="font-bold text-water-dark whitespace-nowrap">15–19 秒</span>
+              <span class="font-bold text-wood-700">2分</span>
+              <span class="text-right flex-1">腎氣不錯，靜中帶穩</span>
+            </div>
+            <div class="flex justify-between items-center gap-2">
+              <span class="font-bold text-water-dark whitespace-nowrap">0–14 秒</span>
+              <span class="font-bold text-wood-700">1分</span>
+              <span class="text-right flex-1">腎氣偏弱，需多調養</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <button
+            onclick="game.restart()"
+            class="w-full font-bold rounded-lg transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center gap-2 bg-water-main hover:bg-water-accent text-white shadow-wood-200 px-6 py-2 text-lg tracking-widest border border-transparent"
+          >
+            再來一次
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STATE = {
+      status: 'START', // START, PLAYING, FINISHED
+      startTime: 0,
+      elapsed: 0,
+      tiltAngle: 0,       // 角度（度數）
+      tiltVelocity: 0,    // 角速度（度/秒）
+      animationId: null,
+      pointerActive: false,
+      pointerDirection: 0, // -1 左, +1 右
+      lastFrameTime: 0,
+      lastResult: null,
+    };
+
+    const ui = {
+      els: {
+        screenStart: document.getElementById('screen-start'),
+        screenGame: document.getElementById('screen-game'),
+        timeDisplay: document.getElementById('time-display'),
+        timeDisplayBig: document.getElementById('time-display-big'),
+        dropWrapper: document.getElementById('drop-wrapper'),
+        modalResult: document.getElementById('modal-result'),
+        resTime: document.getElementById('res-time'),
+        resMsg: document.getElementById('res-msg'),
+        resSubMsg: document.getElementById('res-submsg'),
+        resScore: document.getElementById('res-score'),
+        gameArea: document.getElementById('game-area'),
+      },
+
+      showStart() {
+        this.els.screenStart.classList.remove('hidden-force');
+        this.els.screenGame.classList.add('hidden-force');
+        this.hideResult();
+      },
+
+      showGame() {
+        this.els.screenStart.classList.add('hidden-force');
+        this.els.screenGame.classList.remove('hidden-force');
+      },
+
+      updateTimeDisplay(sec) {
+        const s = Math.floor(sec);
+        this.els.timeDisplay.textContent = s;
+        this.els.timeDisplayBig.textContent = s;
+      },
+
+      updateDropAngle(angle) {
+        this.els.dropWrapper.style.transform =
+          `translateX(-50%) translateY(0) rotate(${angle}deg)`;
+      },
+
+      showResult(data) {
+        if (!data) return;
+        this.els.resTime.textContent = Math.floor(data.time);
+        this.els.resScore.textContent = data.score;
+        this.els.resMsg.textContent = data.message;
+        this.els.resSubMsg.textContent = data.subMessage;
+        this.els.modalResult.classList.remove('hidden-force');
+      },
+
+      hideResult() {
+        this.els.modalResult.classList.add('hidden-force');
+      },
+
+      closeResult() {
+        this.hideResult();
+      },
+    };
+
+    const game = {
+      init() {
+        STATE.status = 'START';
+        STATE.tiltAngle = 0;
+        STATE.tiltVelocity = 0;
+        STATE.elapsed = 0;
+        STATE.pointerActive = false;
+        STATE.pointerDirection = 0;
+        if (STATE.animationId) cancelAnimationFrame(STATE.animationId);
+        ui.updateTimeDisplay(0);
+        ui.updateDropAngle(0);
+        ui.showStart();
+      },
+
+      startGame() {
+        STATE.status = 'PLAYING';
+        STATE.startTime = performance.now();
+        STATE.lastFrameTime = STATE.startTime;
+        STATE.elapsed = 0;
+        STATE.tiltAngle = 0;     // 一開始完全垂直
+        STATE.tiltVelocity = 0;  // 沒有初始速度
+        STATE.pointerActive = false;
+        STATE.pointerDirection = 0;
+        ui.showGame();
+        ui.updateTimeDisplay(0);
+        ui.updateDropAngle(0);
+        this.bindInput();
+        this.loop();
+      },
+
+      bindInput() {
+        const area = ui.els.gameArea;
+
+        const onPointerDown = (e) => {
+          if (STATE.status !== 'PLAYING') return;
+          e.preventDefault();
+          const x = e.clientX || (e.touches && e.touches[0]?.clientX);
+          const mid = window.innerWidth / 2;
+          STATE.pointerActive = true;
+          STATE.pointerDirection = x < mid ? -1 : 1;
+        };
+
+        const onPointerUp = (e) => {
+          e && e.preventDefault();
+          STATE.pointerActive = false;
+          STATE.pointerDirection = 0;
+        };
+
+        area.onpointerdown = onPointerDown;
+        area.onpointerup = onPointerUp;
+        area.onpointercancel = onPointerUp;
+        area.onpointerleave = () => {
+          STATE.pointerActive = false;
+          STATE.pointerDirection = 0;
+        };
+      },
+
+      loop() {
+        if (STATE.status !== 'PLAYING') return;
+
+        const now = performance.now();
+        const dt = (now - STATE.lastFrameTime) / 1000; // 秒
+        STATE.lastFrameTime = now;
+
+        // 更新經過時間
+        STATE.elapsed = (now - STATE.startTime) / 1000;
+        const t = STATE.elapsed;
+        ui.updateTimeDisplay(t);
+
+        // ---- 難度曲線與物理模擬 ----
+
+        let angle = STATE.tiltAngle;
+        let vel = STATE.tiltVelocity;
+
+        // 基礎阻尼，避免速度失控
+        const damping = 0.985;
+        vel *= damping;
+
+        // 自然晃動 (微小噪音 + 隨時間增加的難度)
+        // 前 5 秒非常穩定，之後慢慢變大
+        let difficultyFactor = 1;
+        if (t > 5) {
+          difficultyFactor = 1 + (t - 5) * 0.06; // 每秒慢慢增加
+          if (difficultyFactor > 2.5) difficultyFactor = 2.5; // 上限
+        }
+
+        // 基礎隨機漂移（自然晃動）
+        const baseDriftStrength = (t < 5 ? 2 : 5) * difficultyFactor; // 度/秒²
+        const noise = (Math.random() * 2 - 1); // -1 ~ 1
+        vel += noise * baseDriftStrength * dt;
+
+        // 玩家控制力道
+        if (STATE.pointerActive && STATE.pointerDirection !== 0) {
+          // 基礎控制力道（度/秒²）
+          const controlBase = 50;
+          // 隨著時間變長可稍微放大一點控制力
+          const controlFactor = 1 + Math.min(t / 20, 0.5); // 最多+50%
+          const control = controlBase * controlFactor;
+          vel += STATE.pointerDirection * control * dt * -1;
+          // * -1 是讓點左邊時，視覺上水滴往左修正
+        }
+
+        // 更新角度
+        angle += vel * dt;
+
+        // 前 3 秒保護期：限制最大角度，不會倒
+        const protectTime = 3;
+        const protectAngle = 10; // 度
+        const criticalAngle = 28; // 超過就倒下（保護期後）
+
+        if (t < protectTime) {
+          if (angle > protectAngle) angle = protectAngle;
+          if (angle < -protectAngle) angle = -protectAngle;
+        }
+
+        // 硬性限制，避免數值爆炸
+        if (angle > 60) angle = 60;
+        if (angle < -60) angle = -60;
+
+        STATE.tiltAngle = angle;
+        STATE.tiltVelocity = vel;
+        ui.updateDropAngle(angle);
+
+        // 判定遊戲結束條件
+        if (t >= 30) {
+          // 撐滿 30 秒，自動結束
+          this.finish(t);
+          return;
+        }
+
+        if (t >= protectTime && Math.abs(angle) >= criticalAngle) {
+          // 超過臨界角度後倒下
+          this.finish(t);
+          return;
+        }
+
+        STATE.animationId = requestAnimationFrame(() => this.loop());
+      },
+
+      finish(timeSec) {
+        STATE.status = 'FINISHED';
+        if (STATE.animationId) cancelAnimationFrame(STATE.animationId);
+
+        const finalTime = Math.floor(timeSec);
+        const result = this.calculateResult(finalTime);
+        STATE.lastResult = result;
+        ui.showResult(result);
+      },
+
+      calculateResult(sec) {
+        let score = 1;
+        let message = '';
+        let subMessage = '';
+
+        if (sec >= 20) {
+          score = 3;
+          message = '腎氣充盈，穩若靜水';
+          subMessage = '你的沉穩與專注，讓平衡像水面微光一樣安然不動。';
+        } else if (sec >= 15) {
+          score = 2;
+          message = '腎氣不錯，靜中帶穩';
+          subMessage = '已經找到自己的節奏，再多一點耐心，會越站越穩。';
+        } else {
+          score = 1;
+          message = '腎氣偏弱，需多調養';
+          subMessage = '別急著否定自己，從調整呼吸與專注開始，下一次會更好。';
+        }
+
+        return {
+          time: sec,
+          score,
+          message,
+          subMessage,
+        };
+      },
+
+      restart() {
+        this.init();
+      },
+    };
+
+    // expose for buttons
+    window.game = game;
+    window.ui = ui;
+
+    // init on load
+    game.init();
+  </script>
 </body>
 </html>
